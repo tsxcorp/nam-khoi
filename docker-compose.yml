@@ -22,7 +22,6 @@ services:
     container_name: nocobase-app
     networks:
       - nam-khoi_nocobase-network
-      - traefik_net
     expose:
       - "13000"
     environment:
