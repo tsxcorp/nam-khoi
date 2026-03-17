@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: nocobase-postgres
+    networks:
+      - nocobase-network
+    environment:
+      - POSTGRES_USER=${DB_USER:-nocobase}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-nocobase_password}
+      - POSTGRES_DB=${DB_DATABASE:-nocobase}
+    volumes:
+      - ./storage/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-nocobase} -d ${DB_DATABASE:-nocobase}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  nocobase:
+    image: nocobase/nocobase:latest
+    container_name: nocobase-app
+    networks:
+      - nocobase-network
+    ports:
+      - "${APP_PORT:-13000}:13000"
+    environment:
+      - DB_DIALECT=${DB_DIALECT:-postgres}
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-nocobase}
+      - DB_USER=${DB_USER:-nocobase}
+      - DB_PASSWORD=${DB_PASSWORD:-nocobase_password}
+      - APP_KEY=${APP_KEY}
+    volumes:
+      - ./storage/app:/app/nocobase/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+  adminer:
+    image: adminer
+    container_name: nocobase-adminer
+    networks:
+      - nocobase-network
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    restart: always
+
+networks:
+  nocobase-network:
+    driver: bridge
