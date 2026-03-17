@@ -57,7 +57,4 @@ services:
 
 networks:
   nam-khoi_nocobase-network:
-    driver: bridge
-  traefik_net:
     external: true
-    name: ${TRAEFIK_NETWORK:-traefik}
