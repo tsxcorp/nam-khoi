@@ -24,7 +24,7 @@ services:
     container_name: nocobase-app
     networks:
       - nocobase-network
-      - traefik
+      - traefik_net
     expose:
       - "13000"
     environment:
@@ -46,7 +46,6 @@ services:
       - "traefik.http.routers.nocobase.entrypoints=websecure"
       - "traefik.http.routers.nocobase.tls.certresolver=myresolver"
       - "traefik.http.services.nocobase.loadbalancer.server.port=13000"
-      - "traefik.docker.network=traefik"
     restart: always
 
   adminer:
@@ -59,7 +58,8 @@ services:
     restart: always
 
 networks:
-  nocobase-network:
+  nam-khoi_nocobase-network:
     driver: bridge
-  traefik:
+  traefik_net:
     external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
