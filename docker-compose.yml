@@ -43,6 +43,7 @@ services:
       - "traefik.http.routers.nocobase.entrypoints=websecure"
       - "traefik.http.routers.nocobase.tls.certresolver=myresolver"
       - "traefik.http.services.nocobase.loadbalancer.server.port=13000"
+      - "traefik.docker.network=traefik"
     restart: always
 
   adminer:
