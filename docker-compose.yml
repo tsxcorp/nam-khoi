@@ -3,7 +3,7 @@ services:
     image: postgres:14
     container_name: nocobase-postgres
     networks:
-      - nam-khoi_nocobase-network
+      - internal
     environment:
       - POSTGRES_USER=${DB_USER:-nocobase}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-nocobase_password}
@@ -21,7 +21,8 @@ services:
     image: nocobase/nocobase:latest
     container_name: nocobase-app
     networks:
-      - nam-khoi_nocobase-network
+      - internal
+      - traefik_net
     expose:
       - "13000"
     environment:
@@ -41,20 +42,23 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.nocobase.rule=Host(`namkhoi.nexpo.vn`)"
       - "traefik.http.routers.nocobase.entrypoints=websecure"
-      - "traefik.http.routers.nocobase.tls.certresolver=myresolver"
+      - "traefik.http.routers.nocobase.tls.certresolver=myresolver" # Tên resolver trong file traefik chính của bạn
       - "traefik.http.services.nocobase.loadbalancer.server.port=13000"
-      - "traefik.docker.network=traefik"
+      - "traefik.docker.network=traefik" # Chỉ định mạng để Traefik tìm thấy container này
     restart: always
 
   adminer:
     image: adminer
     container_name: nocobase-adminer
     networks:
-      - nam-khoi_nocobase-network
+      - internal
     ports:
       - "${ADMINER_PORT:-8080}:8080"
     restart: always
 
 networks:
-  nam-khoi_nocobase-network:
+  internal:
+    driver: bridge
+  traefik_net:
     external: true
+    name: traefik # Mạng chung dùng để kết nối tới container Traefik có sẵn
