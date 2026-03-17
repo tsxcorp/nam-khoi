@@ -21,7 +21,7 @@ services:
     image: nocobase/nocobase:latest
     container_name: nocobase-app
     networks:
-      - nocobase-network
+      - nam-khoi_nocobase-network
       - traefik_net
     expose:
       - "13000"
@@ -50,7 +50,7 @@ services:
     image: adminer
     container_name: nocobase-adminer
     networks:
-      - nocobase-network
+      - nam-khoi_nocobase-network
     ports:
       - "${ADMINER_PORT:-8080}:8080"
     restart: always
