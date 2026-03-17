@@ -1,6 +1,32 @@
 version: '3'
 
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # Chuyển hướng HTTP sang HTTPS tự động
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./storage/traefik:/letsencrypt"
+    networks:
+      - nocobase-network
+    restart: always
+
   postgres:
     image: postgres:14
     container_name: nocobase-postgres
@@ -24,8 +50,8 @@ services:
     container_name: nocobase-app
     networks:
       - nocobase-network
-    ports:
-      - "${APP_PORT:-13000}:13000"
+    expose:
+      - "13000"
     environment:
       - DB_DIALECT=${DB_DIALECT:-postgres}
       - DB_HOST=postgres
@@ -39,6 +65,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nocobase.rule=Host(`namkhoi.nexpo.vn`)"
+      - "traefik.http.routers.nocobase.entrypoints=websecure"
+      - "traefik.http.routers.nocobase.tls.certresolver=myresolver"
+      - "traefik.http.services.nocobase.loadbalancer.server.port=13000"
     restart: always
 
   adminer:
@@ -46,8 +78,12 @@ services:
     container_name: nocobase-adminer
     networks:
       - nocobase-network
-    ports:
-      - "${ADMINER_PORT:-8080}:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`db.${DOMAIN}`)"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=myresolver"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
     restart: always
 
 networks:
