@@ -42,9 +42,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.nocobase.rule=Host(`namkhoi.nexpo.vn`)"
       - "traefik.http.routers.nocobase.entrypoints=websecure"
-      - "traefik.http.routers.nocobase.tls.certresolver=myresolver" # Tên resolver trong file traefik chính của bạn
+      - "traefik.http.routers.nocobase.tls.certresolver=myresolver"
       - "traefik.http.services.nocobase.loadbalancer.server.port=13000"
-      - "traefik.docker.network=traefik" # Chỉ định mạng để Traefik tìm thấy container này
+      - "traefik.docker.network=app-network" # Đã đổi thành mạng thực tế của Traefik
     restart: always
 
   adminer:
@@ -61,4 +61,4 @@ networks:
     driver: bridge
   traefik_net:
     external: true
-    name: traefik # Mạng chung dùng để kết nối tới container Traefik có sẵn
+    name: app-network # Tên mạng chính xác lấy từ docker inspect
