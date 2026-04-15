@@ -18,7 +18,7 @@ services:
     restart: always
 
   nocobase:
-    image: nocobase/nocobase:latest
+    image: nocobase/nocobase:2.0.19-full
     container_name: nocobase-app
     networks:
       - internal
@@ -33,11 +33,21 @@ services:
       - DB_USER=${DB_USER:-nocobase}
       - DB_PASSWORD=${DB_PASSWORD:-nocobase_password}
       - APP_KEY=${APP_KEY}
+      # Redis Config cho NocoBase
+      - CACHE_DEFAULT_STORE=redis
+      - CACHE_REDIS_URL=redis://redis:6379/0
+      - PUBSUB_ADAPTER_REDIS_URL=redis://redis:6379/1
+      - LOCK_ADAPTER_DEFAULT=redis
+      - LOCK_ADAPTER_REDIS_URL=redis://redis:6379/2
+      - QUEUE_ADAPTER=redis
+      - QUEUE_ADAPTER_REDIS_URL=redis://redis:6379/3
     volumes:
       - ./storage/app:/app/nocobase/storage
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nocobase.rule=Host(`namkhoi.nexpo.vn`)"
@@ -45,6 +55,13 @@ services:
       - "traefik.http.routers.nocobase.tls.certresolver=myresolver"
       - "traefik.http.services.nocobase.loadbalancer.server.port=13000"
       - "traefik.docker.network=app-network" # Đã đổi thành mạng thực tế của Traefik
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: nocobase-redis
+    networks:
+      - internal
     restart: always
 
   adminer:
